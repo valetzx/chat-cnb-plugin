@@ -1,39 +1,24 @@
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
-from astrbot.api import logger
+from astrbot.api import logger, AstrBotConfig
 import aiohttp
 import json
-import os
 
 @register("chat-cnb", "OpenAI", "基于 CNB 知识库的对话插件", "1.0.0")
 class CnbPlugin(Star):
-    def __init__(self, context: Context):
+    def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
-        self.token = self.context.get("token") if hasattr(self.context, "get") else None
+        self.config = config
+        self.token = (
+            config.get("token")
+            or (context.get("token") if hasattr(context, "get") else None)
+        )
         self.repo = (
-            self.context.get("repo") if hasattr(self.context, "get") else None
-        ) or "cnb/docs"
-        self._init_config()
+            config.get("repo")
+            or (context.get("repo") if hasattr(context, "get") else None)
+            or "cnb/docs"
+        )
 
-    def _init_config(self):
-        """初始化配置，从 config 文件夹加载 token 以及知识库"""
-        try:
-            config_path = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)),
-                "../config",
-                "config.json",
-            )
-            if os.path.exists(config_path):
-                with open(config_path, "r", encoding="utf-8") as f:
-                    file_config = json.load(f)
-                if "token" in file_config:
-                    self.token = file_config.get("token") or self.token
-                if "repo" in file_config:
-                    self.repo = file_config.get("repo") or self.repo
-                logger.info(f"从文件加载配置成功: {config_path}")
-        except Exception as e:
-            logger.error(f"从文件加载配置失败: {e}")
-            
     async def initialize(self):
         """插件初始化"""
 
