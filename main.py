@@ -3,8 +3,9 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
 import aiohttp
 import json
+import re
 
-@register("chat-cnb", "valetzx", "基于 CNB 知识库的对话插件", "1.1.0")
+@register("chat-cnb", "valetzx", "基于 CNB 知识库的对话插件", "1.2.0")
 class CnbPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
@@ -18,6 +19,7 @@ class CnbPlugin(Star):
             or (context.get("repo") if hasattr(context, "get") else None)
             or "cnb/docs"
         )
+        self.show_think = False
 
     async def initialize(self):
         """插件初始化"""
@@ -28,6 +30,17 @@ class CnbPlugin(Star):
         message = event.message_str.strip()
         if not message:
             yield event.plain_result("请在指令后提供问题，例如 `/cnb 你的问题`")
+            return
+
+        if message.startswith("think"):
+            parts = message.split()
+            if len(parts) == 2 and parts[1] in {"on", "off"}:
+                self.show_think = parts[1] == "on"
+                yield event.plain_result(
+                    "已开启思考内容" if self.show_think else "已关闭思考内容"
+                )
+            else:
+                yield event.plain_result("用法: /cnb think on|off")
             return
 
         # 允许用户在指令中指定知识库，例如 `/cnb user/repo 你的问题`
@@ -118,15 +131,29 @@ class CnbPlugin(Star):
                         if delta:
                             answer += delta
 
+            think_content = ""
+            answer_content = answer
+            think_match = re.search(r"<think>(.*?)</think>", answer, re.DOTALL)
+            answer_match = re.search(r"<answer>(.*?)</answer>", answer, re.DOTALL)
+            if think_match:
+                think_content = think_match.group(1).strip()
+            if answer_match:
+                answer_content = answer_match.group(1).strip()
+
+            final_answer = ""
+            if self.show_think and think_content:
+                final_answer += think_content + "\n"
+            final_answer += answer_content
+
             refs = [
                 item.get("metadata", {}).get("permalink")
                 for item in data
                 if item.get("metadata", {}).get("permalink")
             ]
             if refs:
-                answer += "\n\n参考资料:\n" + "\n".join(refs)
+                final_answer += "\n\n参考资料:\n" + "\n".join(refs)
 
-            yield event.plain_result(answer)
+            yield event.plain_result(final_answer)
         except Exception as e:
             logger.exception(e)
             yield event.plain_result("处理失败")

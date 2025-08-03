@@ -13,3 +13,5 @@
 ## 使用
 
 发送 `/cnb 你的问题` 即可使用默认知识库得到回答；若需查询其他知识库，使用 `/cnb user/repo 你的问题` 或 `/cnb repo:user/repo 你的问题`。
+
+若需要同时查看模型的思考内容，可发送 `/cnb think on` 开启；使用 `/cnb think off` 关闭（默认关闭）。
