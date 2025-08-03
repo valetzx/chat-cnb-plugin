@@ -19,21 +19,33 @@ class CnbPlugin(Star):
     @filter.command("cnb")
     async def cnb(self, event: AstrMessageEvent):
         """查询 CNB 知识库并生成回答"""
-        question = event.message_str.strip()
-        if not question:
+        message = event.message_str.strip()
+        if not message:
             yield event.plain_result("请在指令后提供问题，例如 `/cnb 你的问题`")
             return
+
+        # 允许用户在指令中指定知识库，例如 `/cnb user/repo 你的问题`
+        parts = message.split(maxsplit=1)
+        repo = self.repo
+        if "/" in parts[0]:
+            repo = parts[0]
+            if len(parts) < 2 or not parts[1].strip():
+                yield event.plain_result("请在指令后提供问题，例如 `/cnb 知识库 你的问题`")
+                return
+            question = parts[1].strip()
+        else:
+            question = message
 
         if not self.token:
             yield event.plain_result("插件未配置 token")
             return
-        if not self.repo:
+        if not repo:
             yield event.plain_result("插件未配置 repo")
             return
 
         try:
             async with aiohttp.ClientSession() as session:
-                query_url = f"https://api.cnb.cool/{self.repo}/-/knowledge/base/query"
+                query_url = f"https://api.cnb.cool/{repo}/-/knowledge/base/query"
                 headers = {
                     "Authorization": f"Bearer {self.token}",
                     "Content-Type": "application/json",
@@ -63,7 +75,7 @@ class CnbPlugin(Star):
             )
 
             async with aiohttp.ClientSession() as session:
-                chat_url = f"https://api.cnb.cool/{self.repo}/-/ai/chat/completions"
+                chat_url = f"https://api.cnb.cool/{repo}/-/ai/chat/completions"
                 payload = {
                     "messages": [{"role": "user", "content": rag_prompt}],
                     "model": "gpt-3.5-turbo",
