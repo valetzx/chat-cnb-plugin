@@ -95,7 +95,8 @@ class CnbPlugin(Star):
                 "知识库内容：\n"
                 f"{knowledge_content}\n"
                 f"用户问题：{question}\n"
-                "请先在 <think> 标签中给出思考过程，然后在 <answer> 标签中给出最终回答。如果知识库中没有相关信息，请明确说明。\n"
+                "请基于上述知识库内容，准确、详细地回答用户的问题。如果知识库中没有相关信息，请明确说明。\n"
+                "在回答的最后，请添加一个\"参考资料\"部分，列出回答中引用的相关资料链接。\n"
             )
 
             async with aiohttp.ClientSession() as session:
