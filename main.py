@@ -2,6 +2,7 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 import aiohttp
+import json
 
 @register("chat-cnb", "OpenAI", "基于 CNB 知识库的对话插件", "1.0.0")
 class CnbPlugin(Star):
@@ -49,6 +50,8 @@ class CnbPlugin(Star):
                 yield event.plain_result("知识库返回格式错误")
                 return
 
+            yield event.plain_result("查询成功，正在回答")
+
             knowledge_content = "\n\n".join(item.get("chunk", "") for item in data)
             rag_prompt = (
                 "基于以下知识库内容回答用户问题：\n"
@@ -64,7 +67,7 @@ class CnbPlugin(Star):
                 payload = {
                     "messages": [{"role": "user", "content": rag_prompt}],
                     "model": "gpt-3.5-turbo",
-                    "stream": False,
+                    "stream": True,
                 }
                 headers = {
                     "Authorization": f"Bearer {self.token}",
@@ -76,15 +79,26 @@ class CnbPlugin(Star):
                         text = await resp.text()
                         yield event.plain_result(f"AI 请求失败: {resp.status} {text}")
                         return
-                    ai_data = await resp.json()
-
-            answer = (
-                ai_data.get("choices", [{}])[0]
-                .get("message", {})
-                .get("content", "")
-            )
-            if not answer:
-                answer = str(ai_data)
+                    answer = ""
+                    async for line in resp.content:
+                        line = line.decode("utf-8").strip()
+                        if not line:
+                            continue
+                        if line.startswith("data:"):
+                            line = line[5:].strip()
+                        if line == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        delta = (
+                            chunk.get("choices", [{}])[0]
+                            .get("delta", {})
+                            .get("content")
+                        )
+                        if delta:
+                            answer += delta
 
             refs = [
                 item.get("metadata", {}).get("permalink")
