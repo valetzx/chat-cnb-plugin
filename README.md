@@ -11,5 +11,3 @@
 在 `_conf_schema.json` 中设置 `token`，以及可选的 `repo`（未设置时默认为 `cnb/docs`），用于访问 CNB API。
 
 ## 使用
-
-发送 `/cnb 你的问题` 即可使用默认知识库得到回答；若需查询其他知识库，使用 `/cnb user/repo 你的问题` 或 `/cnb repo:user/repo 你的问题`。
