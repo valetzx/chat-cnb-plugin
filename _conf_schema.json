@@ -12,5 +12,11 @@
         "hint": "repo123",
         "default": " ",
         "obvious_hint": false
+    },
+    "think": {
+        "description": "思考模式",
+        "type": "bool",
+        "hint": "展示思考内容",
+        "default": false
     }
 }
