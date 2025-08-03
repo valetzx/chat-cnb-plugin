@@ -23,8 +23,9 @@ class CnbPlugin(Star):
         """插件初始化"""
 
     @filter.command("cnb")
-    async def cnb(self, event: AstrMessageEvent):
+    async def cnb(self, event: AstrMessageEvent, ctx: Context, *args):
         """查询 CNB 知识库并生成回答"""
+        # 兼容星火调用签名，将多余的参数忽略
         message = event.message_str.strip()
         if not message:
             yield event.plain_result("请在指令后提供问题，例如 `/cnb 你的问题`")
