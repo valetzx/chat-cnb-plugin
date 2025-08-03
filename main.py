@@ -18,6 +18,11 @@ class CnbPlugin(Star):
             or (context.get("repo") if hasattr(context, "get") else None)
             or "cnb/docs"
         )
+        self.think = (
+            config.get("think")
+            or (context.get("think") if hasattr(context, "get") else None)
+            or False
+        )
 
     async def initialize(self):
         """插件初始化"""
@@ -28,6 +33,19 @@ class CnbPlugin(Star):
         message = event.message_str.strip()
         if not message:
             yield event.plain_result("请在指令后提供问题，例如 `/cnb 你的问题`")
+            return
+
+        # 思考模式开关
+        if message.lower().startswith("think"):
+            parts = message.split(maxsplit=1)
+            if len(parts) > 1 and parts[1].lower() == "on":
+                self.think = True
+                yield event.plain_result("已开启思考模式")
+            elif len(parts) > 1 and parts[1].lower() == "off":
+                self.think = False
+                yield event.plain_result("已关闭思考模式")
+            else:
+                yield event.plain_result("用法: `/cnb think on|off`")
             return
 
         # 允许用户在指令中指定知识库，例如 `/cnb user/repo 你的问题`
@@ -126,7 +144,17 @@ class CnbPlugin(Star):
             if refs:
                 answer += "\n\n参考资料:\n" + "\n".join(refs)
 
-            yield event.plain_result(answer)
+            if self.think:
+                think_content = (
+                    "知识库内容:\n"
+                    f"{knowledge_content}\n"
+                    f"用户问题: {question}"
+                )
+                yield event.plain_result(
+                    f"<think>{think_content}</think><answer>{answer}</answer>"
+                )
+            else:
+                yield event.plain_result(f"<answer>{answer}</answer>")
         except Exception as e:
             logger.exception(e)
             yield event.plain_result("处理失败")
