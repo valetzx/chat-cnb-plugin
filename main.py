@@ -31,23 +31,22 @@ class CnbPlugin(Star):
             return
 
         # 允许用户在指令中指定知识库，例如
-        # `/cnb user/repo 你的问题` 或 `/cnb user/provider/repo 你的问题`
+        # `/cnb user/repo 你的问题` 或 `/cnb repo:user/repo 你的问题`
         parts = message.split(maxsplit=1)
         repo = self.repo
-        if "/" in parts[0]:
-            repo_candidate = parts[0]
-            if len(parts) < 2 or not parts[1].strip():
-                yield event.plain_result("请在指令后提供问题，例如 `/cnb 知识库 你的问题`")
-                return
-            question = parts[1].strip()
-            segments = repo_candidate.split("/")
-            if len(segments) == 3:
-                # 支持 `user/provider/repo` 格式，将其转换为 `provider/user/repo`
-                repo = f"{segments[1]}/{segments[0]}/{segments[2]}"
-            else:
-                repo = repo_candidate
-        else:
-            question = message
+        question = message
+        if parts:
+            first = parts[0]
+            if first.startswith("repo:"):
+                repo = first[5:]
+                question = parts[1].strip() if len(parts) > 1 else ""
+            elif "/" in first and not first.startswith("http://") and not first.startswith("https://"):
+                repo = first
+                question = parts[1].strip() if len(parts) > 1 else ""
+
+        if not question:
+            yield event.plain_result("请在指令后提供问题，例如 `/cnb [知识库] 你的问题`")
+            return
 
         if not self.token:
             yield event.plain_result("插件未配置 token")
