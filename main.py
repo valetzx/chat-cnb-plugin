@@ -3,6 +3,7 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
 import aiohttp
 import json
+import re
 
 @register("chat-cnb", "valetzx", "基于 CNB 知识库的对话插件", "1.1.0")
 class CnbPlugin(Star):
@@ -18,6 +19,11 @@ class CnbPlugin(Star):
             or (context.get("repo") if hasattr(context, "get") else None)
             or "cnb/docs"
         )
+        self.think = (
+            config.get("think")
+            or (context.get("think") if hasattr(context, "get") else None)
+            or False
+        )
 
     async def initialize(self):
         """插件初始化"""
@@ -28,6 +34,19 @@ class CnbPlugin(Star):
         message = event.message_str.strip()
         if not message:
             yield event.plain_result("请在指令后提供问题，例如 `/cnb 你的问题`")
+            return
+
+        # 思考模式开关
+        if message.lower().startswith("think"):
+            parts = message.split(maxsplit=1)
+            if len(parts) > 1 and parts[1].lower() == "on":
+                self.think = True
+                yield event.plain_result("已开启思考模式")
+            elif len(parts) > 1 and parts[1].lower() == "off":
+                self.think = False
+                yield event.plain_result("已关闭思考模式")
+            else:
+                yield event.plain_result("用法: `/cnb think on|off`")
             return
 
         # 允许用户在指令中指定知识库，例如 `/cnb user/repo 你的问题`
@@ -76,8 +95,7 @@ class CnbPlugin(Star):
                 "知识库内容：\n"
                 f"{knowledge_content}\n"
                 f"用户问题：{question}\n"
-                "请基于上述知识库内容，准确、详细地回答用户的问题。如果知识库中没有相关信息，请明确说明。\n"
-                "在回答的最后，请添加一个\"参考资料\"部分，列出回答中引用的相关资料链接。\n"
+                "请先在 <think> 标签中给出思考过程，然后在 <answer> 标签中给出最终回答。如果知识库中没有相关信息，请明确说明。\n"
             )
 
             async with aiohttp.ClientSession() as session:
@@ -123,10 +141,24 @@ class CnbPlugin(Star):
                 for item in data
                 if item.get("metadata", {}).get("permalink")
             ]
+            think_content = ""
+            answer_match = re.search(r"<answer>(.*?)</answer>", answer, re.DOTALL)
+            if answer_match:
+                answer_content = answer_match.group(1).strip()
+            else:
+                answer_content = answer.strip()
+            think_match = re.search(r"<think>(.*?)</think>", answer, re.DOTALL)
+            if think_match:
+                think_content = think_match.group(1).strip()
             if refs:
-                answer += "\n\n参考资料:\n" + "\n".join(refs)
+                answer_content += "\n\n参考资料:\n" + "\n".join(refs)
 
-            yield event.plain_result(answer)
+            if self.think:
+                if think_content:
+                    yield event.plain_result(f"<think>{think_content}</think>")
+                yield event.plain_result(f"<answer>{answer_content}</answer>")
+            else:
+                yield event.plain_result(f"<answer>{answer_content}</answer>")
         except Exception as e:
             logger.exception(e)
             yield event.plain_result("处理失败")
