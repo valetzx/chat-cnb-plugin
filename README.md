@@ -8,7 +8,7 @@
 
 ## 配置
 
-在 `_conf_schema.json` 中设置 `token` 和 `repo`，用于访问 CNB API。
+在 `_conf_schema.json` 中设置 `token`，以及可选的 `repo`（未设置时默认为 `cnb/docs`），用于访问 CNB API。
 
 ## 使用
 
