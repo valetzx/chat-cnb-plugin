@@ -12,4 +12,4 @@
 
 ## 使用
 
-发送 `/cnb 你的问题` 即可使用默认知识库得到回答；若需查询其他知识库，使用 `/cnb user/repo 你的问题`。
+发送 `/cnb 你的问题` 即可使用默认知识库得到回答；若需查询其他知识库，使用 `/cnb user/repo 你的问题`。若知识库位于其他平台，可使用 `/cnb user/platform/repo 你的问题` 指定平台，例如 `/cnb valetzx/github/HowToCook 如何做蛋糕`。
