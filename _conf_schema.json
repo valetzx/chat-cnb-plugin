@@ -1,5 +1,5 @@
 {
-    "properties": {
+    "token": {
         "description": "CNB API Token",
         "type": "string",
         "hint": "CNB API Token",
