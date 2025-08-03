@@ -3,6 +3,7 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api import logger, AstrBotConfig
 import aiohttp
 import json
+import re
 
 @register("chat-cnb", "valetzx", "基于 CNB 知识库的对话插件", "1.1.0")
 class CnbPlugin(Star):
@@ -141,20 +142,24 @@ class CnbPlugin(Star):
                 for item in data
                 if item.get("metadata", {}).get("permalink")
             ]
+            think_content = ""
+            answer_match = re.search(r"<answer>(.*?)</answer>", answer, re.DOTALL)
+            if answer_match:
+                answer_content = answer_match.group(1).strip()
+            else:
+                answer_content = answer.strip()
+            think_match = re.search(r"<think>(.*?)</think>", answer, re.DOTALL)
+            if think_match:
+                think_content = think_match.group(1).strip()
             if refs:
-                answer += "\n\n参考资料:\n" + "\n".join(refs)
+                answer_content += "\n\n参考资料:\n" + "\n".join(refs)
 
             if self.think:
-                think_content = (
-                    "知识库内容:\n"
-                    f"{knowledge_content}\n"
-                    f"用户问题: {question}"
-                )
-                yield event.plain_result(
-                    f"<think>{think_content}</think><answer>{answer}</answer>"
-                )
+                if think_content:
+                    yield event.plain_result(f"<think>{think_content}</think>")
+                yield event.plain_result(f"<answer>{answer_content}</answer>")
             else:
-                yield event.plain_result(f"<answer>{answer}</answer>")
+                yield event.plain_result(f"<answer>{answer_content}</answer>")
         except Exception as e:
             logger.exception(e)
             yield event.plain_result("处理失败")
