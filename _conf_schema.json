@@ -1,1 +1,16 @@
-#这里放配置文件，如CNB TOKEN，默认的知识库链接
+{
+    "token": {
+        "description": "CNB API Token",
+        "type": "string",
+        "hint": "CNB API Token",
+        "default": " ",
+        "obvious_hint": false
+    },
+    "repo": {
+        "description": "repo",
+        "type": "string",
+        "hint": "repo123",
+        "default": " ",
+        "obvious_hint": false
+    }
+}
