@@ -8,7 +8,9 @@ class CnbPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
         self.token = self.context.get("token") if hasattr(self.context, "get") else None
-        self.repo = self.context.get("repo") if hasattr(self.context, "get") else None
+        self.repo = (
+            self.context.get("repo") if hasattr(self.context, "get") else None
+        ) or "cnb/docs"
 
     async def initialize(self):
         """插件初始化"""
@@ -21,8 +23,11 @@ class CnbPlugin(Star):
             yield event.plain_result("请在指令后提供问题，例如 `/cnb 你的问题`")
             return
 
-        if not self.token or not self.repo:
-            yield event.plain_result("插件未配置 token 或 repo")
+        if not self.token:
+            yield event.plain_result("插件未配置 token")
+            return
+        if not self.repo:
+            yield event.plain_result("插件未配置 repo")
             return
 
         try:
