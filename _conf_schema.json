@@ -1,16 +1,17 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "chat-cnb 配置",
-  "type": "object",
-  "properties": {
-    "token": {
-      "type": "string",
-      "title": "CNB API Token"
+    "properties": {
+        "description": "CNB API Token",
+        "type": "string",
+        "hint": "CNB API Token",
+        "default": " ",
+        "obvious_hint": false
     },
     "repo": {
-      "type": "string",
-      "title": "知识库仓库标识"
+        "description": "repo",
+        "type": "string",
+        "hint": "repo123",
+        "default": " ",
+        "obvious_hint": false
     }
-  },
-  "required": ["token", "repo"]
+    }
 }
