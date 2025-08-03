@@ -1,1 +1,16 @@
-#这里放配置文件，如CNB TOKEN，默认的知识库链接
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chat-cnb 配置",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "title": "CNB API Token"
+    },
+    "repo": {
+      "type": "string",
+      "title": "知识库仓库标识"
+    }
+  },
+  "required": ["token", "repo"]
+}
